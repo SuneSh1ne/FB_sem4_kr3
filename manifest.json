@@ -1,0 +1,27 @@
+{
+  "name": "Мои дела",
+  "short_name": "Дела",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "description": "Простой список дел с офлайн-доступом",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/favicon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

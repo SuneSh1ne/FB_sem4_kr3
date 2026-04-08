@@ -1,10 +1,14 @@
-const CACHE_NAME = 'todo-cache-v1';
+const CACHE_NAME = 'todo-cache-v2';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/style.css',
-    'https://unpkg.com/chota@latest'
+  '/',
+  '/index.html',
+  '/app.js',
+  '/style.css',
+  '/manifest.json',
+  '/icons/favicon-48x48.png',
+  '/icons/favicon-128x128.png',
+  '/icons/favicon-512x512.png',
+  'https://unpkg.com/chota@latest'
 ];
 
 // Установка – кэшируем файлы
