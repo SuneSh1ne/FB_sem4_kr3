@@ -1,11 +1,11 @@
 {
-  "name": "Мои дела",
+  "name": "Список дел PWA",
   "short_name": "Дела",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
-  "description": "Простой список дел с офлайн-доступом",
+  "description": "Список дел с офлайн-доступом и App Shell",
   "orientation": "portrait-primary",
   "icons": [
     {
