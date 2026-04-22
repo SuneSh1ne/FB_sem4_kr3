@@ -1,7 +1,5 @@
-// ========== Подключение к серверу WebSocket ==========
 const socket = io('http://localhost:3001');
 
-// ========== App Shell: навигация ==========
 const contentDiv = document.getElementById('app-content');
 const homeBtn = document.getElementById('home-btn');
 const aboutBtn = document.getElementById('about-btn');
@@ -27,41 +25,22 @@ async function loadContent(page) {
     }
 }
 
-// ========== Генерация уникального ID ==========
 function generateId() {
     return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
 }
 
-// ========== Логика работы с заметками и напоминаниями ==========
 function initNotes() {
-    console.log('🔧 initNotes вызвана');
-    
-    // Элементы для простой заметки
     const form = document.getElementById('note-form');
     const input = document.getElementById('note-input');
-    
-    // Элементы для напоминания
     const reminderForm = document.getElementById('reminder-form');
     const reminderText = document.getElementById('reminder-text');
     const reminderTime = document.getElementById('reminder-time');
-    
     const list = document.getElementById('notes-list');
 
-    if (!list) {
-        console.error('❌ notes-list не найден');
-        return;
-    }
-
-    console.log('✅ Элементы найдены:', {
-        form: !!form,
-        reminderForm: !!reminderForm,
-        list: !!list
-    });
+    if (!list) return;
 
     function loadNotes() {
         const notes = JSON.parse(localStorage.getItem('notes') || '[]');
-        console.log('📋 Загрузка заметок:', notes.length);
-        
         list.innerHTML = notes.map(note => {
             let reminderInfo = '';
             if (note.reminder) {
@@ -95,8 +74,6 @@ function initNotes() {
         notes.push(newNote);
         localStorage.setItem('notes', JSON.stringify(notes));
         loadNotes();
-        console.log('✅ Простая заметка добавлена:', text);
-
         socket.emit('newTask', { text: text, timestamp: new Date().toISOString() });
     }
 
@@ -110,7 +87,6 @@ function initNotes() {
         notes.push(newNote);
         localStorage.setItem('notes', JSON.stringify(notes));
         loadNotes();
-        console.log('⏰ Напоминание добавлено:', text, new Date(reminderTimestamp).toLocaleString());
 
         socket.emit('newReminder', {
             id: newNote.id,
@@ -127,7 +103,6 @@ function initNotes() {
         notes = notes.filter(n => n.id !== id);
         localStorage.setItem('notes', JSON.stringify(notes));
         loadNotes();
-        console.log('🗑️ Заметка удалена:', id);
 
         if (deletedNote && deletedNote.reminder) {
             socket.emit('cancelReminder', { id: id });
@@ -143,68 +118,40 @@ function initNotes() {
         });
     }
 
-    // Обработка простой формы
     if (form && input) {
-        console.log('✅ Форма заметки найдена, добавляем обработчик');
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const text = input.value.trim();
-            console.log('📝 Отправка простой заметки:', text);
             if (text) {
                 addSimpleNote(text);
                 input.value = '';
-            } else {
-                console.warn('⚠️ Пустой текст');
             }
         });
-    } else {
-        console.error('❌ Форма заметки не найдена!');
     }
 
-    // Обработка формы напоминания
     if (reminderForm && reminderText && reminderTime) {
-        console.log('✅ Форма напоминания найдена, добавляем обработчик');
         reminderForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const text = reminderText.value.trim();
             const timeValue = reminderTime.value;
             
-            console.log('⏰ Отправка напоминания:', { text, timeValue });
-            
-            if (!text) {
-                alert('Введите текст напоминания');
-                return;
-            }
-            if (!timeValue) {
-                alert('Выберите дату и время');
-                return;
-            }
+            if (!text || !timeValue) return;
             
             const reminderTimestamp = new Date(timeValue).getTime();
-            const now = Date.now();
-            
-            if (reminderTimestamp <= now) {
-                alert('Дата и время должны быть в будущем');
-                return;
-            }
+            if (reminderTimestamp <= Date.now()) return;
             
             addReminderNote(text, reminderTimestamp);
             reminderText.value = '';
             reminderTime.value = '';
         });
-    } else {
-        console.error('❌ Форма напоминания не найдена!');
     }
 
     loadNotes();
 }
 
-// ========== Обработка WebSocket события от других клиентов ==========
 socket.on('taskAdded', (task) => {
-    console.log('📨 Задача от другого клиента:', task);
-    
     const notification = document.createElement('div');
-    notification.textContent = `✨ ${task.text}`;
+    notification.textContent = `✨ Новая задача: ${task.text}`;
     notification.style.cssText = `
         position: fixed;
         bottom: 20px;
@@ -213,15 +160,15 @@ socket.on('taskAdded', (task) => {
         color: white;
         padding: 12px 20px;
         border-radius: 8px;
-        z-index: 1000;
+        z-index: 10000;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease;
+        font-size: 16px;
+        font-weight: bold;
     `;
     document.body.appendChild(notification);
     setTimeout(() => notification.remove(), 3000);
 });
 
-// ========== Push-уведомления ==========
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
@@ -233,7 +180,7 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-const VAPID_PUBLIC_KEY = 'BMZ58mQIB0l4UBraPAagiVP8tSmAtP8Z9JeUy56-9ZMu5DzeJPAtjpoL_SPbCUdlW3VtqCLojKNeFxocJr2zJNY'; // Замените на свой
+const VAPID_PUBLIC_KEY = 'BMZ58mQIB0l4UBraPAagiVP8tSmAtP8Z9JeUy56-9ZMu5DzeJPAtjpoL_SPbCUdlW3VtqCLojKNeFxocJr2zJNY';
 
 async function subscribeToPush() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -254,11 +201,7 @@ async function subscribeToPush() {
             body: JSON.stringify(subscription)
         });
         
-        if (response.ok) {
-            console.log('✅ Подписка на push успешно создана');
-            return true;
-        }
-        return false;
+        return response.ok;
     } catch (err) {
         console.error('❌ Ошибка подписки на push:', err);
         return false;
@@ -294,14 +237,12 @@ async function unsubscribeFromPush() {
                 body: JSON.stringify({ endpoint: subscription.endpoint })
             });
             await subscription.unsubscribe();
-            console.log('✅ Отписка от push выполнена');
         }
     } catch (err) {
         console.error('❌ Ошибка отписки:', err);
     }
 }
 
-// ========== Обработка навигации ==========
 homeBtn.addEventListener('click', () => {
     setActiveButton('home-btn');
     loadContent('home');
@@ -312,13 +253,10 @@ aboutBtn.addEventListener('click', () => {
     loadContent('about');
 });
 
-// ========== Регистрация Service Worker ==========
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             const registration = await navigator.serviceWorker.register('/sw.js');
-            console.log('✅ ServiceWorker зарегистрирован');
-
             const enableBtn = document.getElementById('enable-push');
             const disableBtn = document.getElementById('disable-push');
 
@@ -364,5 +302,4 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ========== Загружаем главную страницу ==========
 loadContent('home');

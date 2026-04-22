@@ -14,7 +14,6 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-    console.log('[SW] Установка');
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then(cache => cache.addAll(ASSETS))
@@ -23,7 +22,6 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-    console.log('[SW] Активация');
     event.waitUntil(
         caches.keys().then(keys => {
             return Promise.all(
@@ -34,7 +32,6 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Стратегии загрузки
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     if (url.origin !== self.location.origin) return;
@@ -63,10 +60,7 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// ========== Обработчик push-уведомлений ==========
 self.addEventListener('push', (event) => {
-    console.log('[SW] Получено push-сообщение');
-    
     let data = { title: '🔔 Уведомление', body: '', reminderId: null };
     if (event.data) {
         try {
@@ -81,21 +75,12 @@ self.addEventListener('push', (event) => {
         icon: '/icons/icon-128x128.png',
         badge: '/icons/icon-48x48.png',
         vibrate: [200, 100, 200],
-        data: {
-            reminderId: data.reminderId,
-            url: '/'
-        }
+        data: { reminderId: data.reminderId, url: '/' }
     };
 
-    // Добавляем кнопку "Отложить" только если есть reminderId
     if (data.reminderId) {
-        options.actions = [
-            {
-                action: 'snooze',
-                title: '⏰ Отложить на 5 минут'
-            }
-        ];
-        options.requireInteraction = true; // Уведомление не исчезает автоматически
+        options.actions = [{ action: 'snooze', title: '⏰ Отложить на 5 минут' }];
+        options.requireInteraction = true;
     }
 
     event.waitUntil(
@@ -103,7 +88,6 @@ self.addEventListener('push', (event) => {
     );
 });
 
-// ========== Обработчик клика по уведомлению ==========
 self.addEventListener('notificationclick', (event) => {
     const notification = event.notification;
     const action = event.action;
@@ -112,24 +96,11 @@ self.addEventListener('notificationclick', (event) => {
     notification.close();
 
     if (action === 'snooze' && reminderId) {
-        // Отправляем запрос на сервер для откладывания
-        console.log('[SW] Откладывание напоминания:', reminderId);
-        
         event.waitUntil(
-            fetch(`/snooze?reminderId=${reminderId}`, {
-                method: 'POST'
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('[SW] Напоминание успешно отложено');
-                } else {
-                    console.error('[SW] Ошибка при откладывании');
-                }
-            })
-            .catch(err => console.error('[SW] Ошибка fetch:', err))
+            fetch(`/snooze?reminderId=${reminderId}`, { method: 'POST' })
+                .catch(err => console.error('[SW] Ошибка fetch:', err))
         );
     } else {
-        // Обычный клик — открываем приложение
         event.waitUntil(
             clients.openWindow('/')
         );
